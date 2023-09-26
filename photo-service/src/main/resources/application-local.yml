@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      authentication-database: photo_db
+      database: photo_db
+      port: 27017
+      host: localhost
+
+base-url: http://127.0.0.1:8083/api/v1/photo/
