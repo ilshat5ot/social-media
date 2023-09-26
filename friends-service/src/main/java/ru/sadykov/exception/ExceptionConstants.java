@@ -7,6 +7,7 @@ public class ExceptionConstants {
     public static final String APPLICATION_HAS_ALREADY_BEEN_SENT_EXC = "Заявка на дружбу уже была отправлена!";
     public static final String ARE_YOU_A_SUB_EXC = "Пользователь оставил вас в подписчиках!";
     public static final String LEFT_AS_A_SUB_EXC = "Вы оставили пользователя в подписчиках!";
+
     public static final String INVALID_REQUEST_EXC = "Не корректный запрос!";
 
     private ExceptionConstants() {

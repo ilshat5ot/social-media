@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.sadykov.dto.ExceptionMessageDto;
 import ru.sadykov.dto.FriendshipDto;
-import ru.sadykov.exception.ExceptionConstants;
 import ru.sadykov.service.FriendshipService;
 import ru.sadykov.validation.UserExist;
 

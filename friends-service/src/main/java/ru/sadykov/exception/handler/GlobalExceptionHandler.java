@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.sadykov.dto.ExceptionMessageDto;
 import ru.sadykov.dto.ValidationErrorResponse;
 import ru.sadykov.exception.exceptions.AddAsAFriendException;
-import ru.sadykov.exception.exceptions.UserNotFoundException;
 import ru.sadykov.validators.Violation;
 
 import java.util.List;
@@ -23,15 +22,9 @@ public class GlobalExceptionHandler {
         return new ExceptionMessageDto(exception.getMessage());
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionMessageDto handleUserNotFoundException(UserNotFoundException exception) {
-        return new ExceptionMessageDto(exception.getMessage());
-    }
-
     @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ValidationErrorResponse onConstraintValidationException(ConstraintViolationException e) {
         final List<Violation> violations = e.getConstraintViolations().stream()
                 .map(
