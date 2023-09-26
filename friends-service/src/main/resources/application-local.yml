@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=friends,security
+    username: postgres
+    password: Postgres
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+server:
+  port: 8082
+
+user-client:
+  name: auth-service
+  baseUrl: http://localhost:8081/api/v1/user
