@@ -9,6 +9,7 @@ import ru.sadykov.repository.PhotoRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +17,6 @@ public class PhotoServiceImpl implements PhotoService {
 
     private final PhotoRepository photoRepository;
     private static final String BASE_URL = "http://127.0.0.1:8083/api/v1/photo/";
-
 
     @Override
     public String savePhoto(RequestPhotoDto requestPhotoDto) {
@@ -32,12 +32,22 @@ public class PhotoServiceImpl implements PhotoService {
                     .builder()
                     .fileName(photoName)
                     .fileAsArrayOfBytes(arrayByteOfPhoto)
+                    .dateTime(LocalDateTime.now())
                     .build();
-            Photo savedPhoto = photoRepository.save(transientPhoto);
+
+            var savedPhoto = photoRepository.save(transientPhoto);
 
             return BASE_URL + savedPhoto.getId();
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    @Override
+    public Photo getPhoto(String photoId) {
+        var savedPhoto = photoRepository
+                .findById(photoId)
+                .orElseThrow(() -> new RuntimeException("Фото не найдено!"));
+        return savedPhoto;
     }
 }
