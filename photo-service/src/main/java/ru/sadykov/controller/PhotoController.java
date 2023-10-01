@@ -37,8 +37,8 @@ public class PhotoController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .contentType(MediaType.IMAGE_JPEG)
-                .body(photo.getFileAsArrayOfBytes());
+                .contentType(MediaType.IMAGE_PNG)
+                .body(null);
     }
 
 }

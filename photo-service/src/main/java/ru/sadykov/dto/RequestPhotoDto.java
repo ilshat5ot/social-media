@@ -1,5 +1,5 @@
 package ru.sadykov.dto;
 
-public record RequestPhotoDto(String url) {
+public record RequestPhotoDto(String pathPhoto) {
 
 }
