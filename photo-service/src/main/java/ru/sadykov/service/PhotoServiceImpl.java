@@ -25,50 +25,47 @@ public class PhotoServiceImpl implements PhotoService {
     private final PhotoRepository photoRepository;
     private final PhotoProcessor photoProcessor;
 
-
     @Override
     public String savePhoto(RequestPhotoDto requestPhotoDto) {
 
+        /**
+         * Считываем фотографию в BufferedImage
+         */
         BufferedImage originalPhoto = photoProcessor.readPhoto(requestPhotoDto.pathPhoto());
 
         int originalWidth = originalPhoto.getWidth();
         int originalHeight = originalPhoto.getHeight();
 
+        /**
+         * Рассчитываем размеры фотографий
+         */
+
         photoProcessor.calculatePhotoHeight(originalWidth, originalHeight);
+        /**
+         * Сжимаем до заданных размеров
+         */
 
         List<BufferedImage> bufferedImages = photoProcessor.resizePhoto(originalPhoto);
-
         var photoExtension = Photos.getPhotoExtension(requestPhotoDto.pathPhoto());
 
+        /**
+         * Конвертируем исходную фотографию в массив байт
+         */
         byte[] originalPhotoAsByteArray = photoProcessor.convertPhotoToByteArray(originalPhoto, photoExtension);
 
+        /**
+         * Получаем массив байт сжатых фотографий
+         */
         List<byte[]> resizePhotoAsByteArray = new ArrayList<>();
         for (BufferedImage bufferedImage : bufferedImages) {
             resizePhotoAsByteArray.add(photoProcessor.convertPhotoToByteArray(bufferedImage, photoExtension));
         }
         Set<Integer> listPhotoSize = FinalPhotoDimensions.photoSize.keySet();
 
-        HashMap<String, List<PhotoSize>> map = new HashMap<>();
-        List<PhotoSize> list = new ArrayList<>();
-        int i = 0;
-        for (Integer width : listPhotoSize) {
-            PhotoSize photoSize = new PhotoSize();
-            photoSize.setWidth(width);
-            photoSize.setHeight(FinalPhotoDimensions.photoSize.get(width));
-            photoSize.setPhotoAsByteArray(resizePhotoAsByteArray.get(i++));
-            list.add(photoSize);
-        }
-        map.put("fixed_width", list);
-
-
-        var photoName = Photos.getPhotoName(requestPhotoDto.pathPhoto());
-        var transientPhoto = Photo
-                .builder()
-                .fileName(photoName)
-                .originalPhoto(originalPhotoAsByteArray)
-                .resizePhoto(map)
-                .dateTime(LocalDateTime.now())
-                .build();
+        /**
+         * Заполняем данные для сохранения в бд
+         */
+        Photo transientPhoto = fillPhoto(requestPhotoDto, originalPhotoAsByteArray, resizePhotoAsByteArray, listPhotoSize);
 
         var savedPhoto = photoRepository.save(transientPhoto);
 
@@ -81,5 +78,31 @@ public class PhotoServiceImpl implements PhotoService {
                 .findById(photoId)
                 .orElseThrow(() -> new RuntimeException("Фото не найдено!"));
         return savedPhoto;
+    }
+
+    private Photo fillPhoto(RequestPhotoDto requestPhotoDto,
+                            byte[] originalPhotoAsByteArray,
+                            List<byte[]> resizePhotoAsByteArray,
+                            Set<Integer> listPhotoSize) {
+        HashMap<String, List<PhotoSize>> map = new HashMap<>();
+        List<PhotoSize> list = new ArrayList<>();
+        int i = 0;
+        for (Integer width : listPhotoSize) {
+            PhotoSize photoSize = new PhotoSize();
+            photoSize.setWidth(width);
+            photoSize.setHeight(FinalPhotoDimensions.photoSize.get(width));
+            photoSize.setPhotoAsByteArray(resizePhotoAsByteArray.get(i++));
+            list.add(photoSize);
+        }
+        map.put("fixed_width", list);
+
+        var photoName = Photos.getPhotoName(requestPhotoDto.pathPhoto());
+        return Photo
+                .builder()
+                .fileName(photoName)
+                .originalPhoto(originalPhotoAsByteArray)
+                .resizePhoto(map)
+                .dateTime(LocalDateTime.now())
+                .build();
     }
 }

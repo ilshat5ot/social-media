@@ -15,6 +15,11 @@ import java.util.Set;
 @Service
 public class PhotoProcessorImpl implements PhotoProcessor {
 
+    /**
+     * Считываем исходный файл и отдаем BufferedImage
+     * @param pathToPhotoAsString
+     * @return
+     */
     @Override
     public BufferedImage readPhoto(String pathToPhotoAsString) {
         BufferedImage bufferedImage;
@@ -26,6 +31,11 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         return bufferedImage;
     }
 
+    /**
+     * Рассчитываем высоту для нескольких форматов изображения.
+     * @param originalWidth - оригинальная ширина фотографии
+     * @param originalHeight - оригинальная высота фотографии
+     */
     @Override
     public void calculatePhotoHeight(int originalWidth, int originalHeight) {
         Set<Integer> setWidth = FinalPhotoDimensions.photoSize.keySet();
@@ -34,6 +44,12 @@ public class PhotoProcessorImpl implements PhotoProcessor {
             FinalPhotoDimensions.photoSize.put(newWidth, newHeight);
         }
     }
+
+    /**
+     * Сжимаем исходную фотографии до заданных размеров и возвращаем лист этих фотографий
+     * @param inputImage
+     * @return
+     */
 
     @Override
     public List<BufferedImage> resizePhoto(BufferedImage inputImage) {
@@ -48,6 +64,12 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         return bufferedImages;
     }
 
+    /***
+     * Переводим BufferedImage в массив байтов для сохранения в БД
+     * @param bufferedImage
+     * @param photoExtension
+     * @return
+     */
     @Override
     public byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String photoExtension) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
