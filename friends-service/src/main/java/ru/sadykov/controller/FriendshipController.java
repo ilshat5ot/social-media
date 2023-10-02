@@ -80,12 +80,12 @@ public class FriendshipController {
                     )
             }
     )
-    @PostMapping("/{currentUserId}/{userId}")
+    @PostMapping("/{currentUserId}/{targetId}")
     public ResponseEntity<?> addAsFriend(
             @PathVariable @Parameter(description = "Текущий пользователь") Long currentUserId,
             @UserExist @PathVariable @Parameter(description = "Идентификатор пользователя, которому необходимо " +
-                    "отправить заявку, либо заявку от которого необходимо одобрить.") Long userId) {
-        FriendshipDto friendship = friendshipService.addAsFriend(currentUserId, userId);
+                    "отправить заявку, либо заявку от которого необходимо одобрить.") Long targetId) {
+        FriendshipDto friendship = friendshipService.addAsFriend(currentUserId, targetId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(friendship);

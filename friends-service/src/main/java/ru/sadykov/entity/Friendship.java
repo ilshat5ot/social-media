@@ -1,5 +1,6 @@
 package ru.sadykov.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,10 +26,20 @@ public class Friendship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false)
     private RelationshipStatus relationshipStatus;
+
+    @Column(nullable = false)
     private Long targetUser;
+
+    @Column(nullable = false)
     private Long sourceUser;
+
+    @Column(nullable = false)
     private String timeOfCreation;
+
+    @Column(nullable = false)
     private boolean isArchive;
 }

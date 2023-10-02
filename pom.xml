@@ -13,7 +13,7 @@
         <module>gateway-service</module>
         <module>discovery-service</module>
         <module>config-service</module>
-        <module>chat-serivce</module>
+        <module>chat-service</module>
         <module>friends-service</module>
         <module>photo-service</module>
         <module>post-service</module>

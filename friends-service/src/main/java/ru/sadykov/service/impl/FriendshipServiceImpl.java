@@ -6,14 +6,13 @@ import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
 import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.localization.LocalizationExceptionMessage;
 import ru.sadykov.repository.FriendshipRepository;
 import ru.sadykov.service.FriendshipService;
-import ru.sadykov.service.add_friend.FriendshipConditionHandler;
+import ru.sadykov.service.addfriend.FriendshipConditionHandler;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-
-import static ru.sadykov.exception.ExceptionConstants.ADD_FROM_FRIENDS_EXC;
 
 
 @Service
@@ -22,6 +21,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private final FriendshipRepository friendshipRepository;
     private final FriendshipConditionHandler friendshipConditionHandler;
+    private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Override
     public FriendshipDto addAsFriend(Long currentUserId, Long userId) {
@@ -63,7 +63,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private void checkingYourself(Long currentUserId, Long userId) {
         if (currentUserId.equals(userId)) {
-            throw new AddAsAFriendException(ADD_FROM_FRIENDS_EXC);
+            throw new AddAsAFriendException(localizationExceptionMessage.getAddFromFriendsExc());
         }
     }
 
