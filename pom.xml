@@ -17,6 +17,7 @@
         <module>friends-service</module>
         <module>photo-service</module>
         <module>post-service</module>
+        <module>auth-service/user-feign</module>
     </modules>
 
     <properties>

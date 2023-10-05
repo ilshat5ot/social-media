@@ -2,6 +2,8 @@ package ru.sadykov.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,26 +12,34 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.sadykov.entity.enums.RelationshipStatus;
 
 @Entity
-@Table(name = "users")
+@Table(name = "friendship")
 
-@Setter
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class Friendship {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String login;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false)
+    private RelationshipStatus relationshipStatus;
 
     @Column(nullable = false)
-    private String password;
+    private Long targetUser;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(nullable = false)
+    private Long sourceUser;
+
+    @Column(nullable = false)
+    private String timeOfCreation;
+
+    @Column(nullable = false)
+    private boolean isArchive;
 }
