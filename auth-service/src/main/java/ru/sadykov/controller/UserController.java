@@ -17,7 +17,6 @@ public class UserController {
 
     private final UserService userService;
 
-    //Правильно ли возвращать просто булин выражение. Или это должно быть dto с полем которое содержит значение булин.
     @GetMapping("/{userId}")
     public ResponseEntity<?> userExists(@PathVariable Long userId) {
         boolean userExists = userService.userExists(userId);

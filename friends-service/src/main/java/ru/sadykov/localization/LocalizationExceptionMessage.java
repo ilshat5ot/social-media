@@ -7,7 +7,7 @@ import java.util.Locale;
 @Getter
 public class LocalizationExceptionMessage {
 
-    private final MessageSource ms = new MessageSource();
+    private final ExceptionMessageSource ms = new ExceptionMessageSource();
 
     private final Locale locale;
 

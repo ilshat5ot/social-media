@@ -4,15 +4,15 @@ import lombok.Getter;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 @Getter
-public class MessageSource extends ResourceBundleMessageSource {
+public class ExceptionMessageSource extends ResourceBundleMessageSource {
 
     private static final String BASE_NAME = "ExceptionMessages";
 
-    public MessageSource() {
+    public ExceptionMessageSource() {
         this(BASE_NAME);
     }
 
-    private MessageSource(String... baseNames) {
+    private ExceptionMessageSource(String... baseNames) {
         super();
         setUseCodeAsDefaultMessage(true);
         setDefaultEncoding("UTF-8");

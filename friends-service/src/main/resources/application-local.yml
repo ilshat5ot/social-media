@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=friends,security
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=friends&tableName=friendship
     username: postgres
     password: Postgres
 
@@ -12,6 +12,6 @@ eureka:
 server:
   port: 8082
 
-user-client:
-  name: auth-service
+user-feign-client:
+  name: user-feign
   baseUrl: http://localhost:8081/api/v1/user

@@ -29,7 +29,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         checkingYourself(currentUserId, userId);
 
         Optional<Friendship> optionalFriendship = friendshipRepository
-                .findByTargetUserAndSourceUserOrSourceUserAndTargetUser(currentUserId, userId, currentUserId, userId);
+                .findByTargetUserAndSourceUser(currentUserId, userId);
 
         if (optionalFriendship.isPresent()) {
             Friendship friendship = optionalFriendship.get();

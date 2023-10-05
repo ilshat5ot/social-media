@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
-public class FriendsApplication {
+public class  FriendsApplication {
     public static void main(String[] args) {
         SpringApplication.run(FriendsApplication.class, args);
     }
