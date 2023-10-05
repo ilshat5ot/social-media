@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +22,7 @@ import ru.sadykov.validation.UserExist;
 
 @Tag(
         name = "FriendshipController",
-        description = "Контроллер отвечает за подписку на других пользователей, " +
-                "перевод подписчика в друзья или удаления его из друзей"
+        description = "Контроллер отвечает за: добавление пользователя в друзья, удаление пользователя из друзей"
 )
 @RestController
 @RequestMapping("api/v1/friend")
@@ -84,10 +84,68 @@ public class FriendshipController {
     public ResponseEntity<?> addAsFriend(
             @PathVariable @Parameter(description = "Текущий пользователь") Long currentUserId,
             @UserExist @PathVariable @Parameter(description = "Идентификатор пользователя, которому необходимо " +
-                    "отправить заявку, либо заявку от которого необходимо одобрить.") Long targetId) {
+                    "отправить заявку, либо заявку от которого необходимо одобрить") Long targetId) {
         FriendshipDto friendship = friendshipService.addAsFriend(currentUserId, targetId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(friendship);
+    }
+
+    @Operation(
+            summary = "Удалить пользователя из друзей",
+            description = "Метод отвечает за: удаление пользователя из друзей, отклонение заявки в друзья",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Успешно",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = FriendshipDto.class)
+                                    )
+                            }
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "Конфликт",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ExceptionMessageDto.class)
+                                    )
+                            }
+
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Не корректный запрос",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ExceptionMessageDto.class)
+                                    )
+                            }
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Пользователь не найден",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ExceptionMessageDto.class)
+                                    )
+                            }
+                    )
+            }
+    )
+    @DeleteMapping("/{currentUserId}/{targetId}")
+    public ResponseEntity<?> deleteFromFriends(
+            @PathVariable @Parameter(description = "Текущий пользователь") Long currentUserId,
+            @UserExist @PathVariable @Parameter(description = "Идентификатор пользователя, которого необходимо " +
+                    "удалить из друзей, либо оставить в подписчиках") Long targetId) {
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(currentUserId, targetId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(friendshipDto);
     }
 }

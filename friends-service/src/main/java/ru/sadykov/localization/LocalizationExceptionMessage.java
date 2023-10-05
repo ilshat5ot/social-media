@@ -16,7 +16,9 @@ public class LocalizationExceptionMessage {
     private final String applicationHasAlreadyBeenSentExc;
     private final String areYouASubExc;
     private final String leftAsASubExc;
-    private final String invalidRequest;
+    private final String invalidRequestExc;
+    private final String deleteHimselfExc;
+    private final String deleteUserAreSubExc;
 
     public LocalizationExceptionMessage(Locale locale) {
         this.locale = locale;
@@ -26,6 +28,8 @@ public class LocalizationExceptionMessage {
         applicationHasAlreadyBeenSentExc = ms.getMessage("application.has.already.been.sent", null, locale);
         areYouASubExc = ms.getMessage("are.you.a.sub", null, locale);
         leftAsASubExc = ms.getMessage("left.as.a.sub", null, locale);
-        invalidRequest = ms.getMessage("invalid.request", null, locale);
+        invalidRequestExc = ms.getMessage("invalid.request", null, locale);
+        deleteHimselfExc = ms.getMessage("friendship.delete.yourself", null, locale);
+        deleteUserAreSubExc = ms.getMessage("friendship.delete.subscriber", null, locale);
     }
 }

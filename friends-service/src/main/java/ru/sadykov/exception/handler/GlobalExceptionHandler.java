@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.sadykov.dto.ExceptionMessageDto;
 import ru.sadykov.dto.ValidationErrorResponse;
 import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.exception.exceptions.DeleteUserFromFriendsException;
 import ru.sadykov.validators.Violation;
 
 import java.util.List;
@@ -19,6 +20,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AddAsAFriendException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ExceptionMessageDto handleAddAsAFriendException(AddAsAFriendException exception) {
+        return new ExceptionMessageDto(exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ExceptionMessageDto handleDeleteUserFromFriendsException(DeleteUserFromFriendsException exception) {
         return new ExceptionMessageDto(exception.getMessage());
     }
 

@@ -27,6 +27,6 @@ public class FriendshipConditionHandler {
                 return serviceResponse.get();
             }
         }
-        throw new AddAsAFriendException(localizationExceptionMessage.getInvalidRequest());
+        throw new AddAsAFriendException(localizationExceptionMessage.getInvalidRequestExc());
     }
 }
