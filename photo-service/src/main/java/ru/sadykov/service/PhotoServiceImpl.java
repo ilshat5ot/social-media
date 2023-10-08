@@ -85,12 +85,7 @@ public class PhotoServiceImpl implements PhotoService {
             mediaType = MediaType.IMAGE_JPEG;
         }
 
-        if (width == null || height == null) {
-            return PhotoDto.builder()
-                    .fileAsByteArrays(savedPhoto.getOriginalPhoto())
-                    .mediaType(mediaType)
-                    .build();
-        } else {
+        if (width != null || height != null) {
             Map<String, List<PhotoSize>> resizePhoto = savedPhoto.getResizePhoto();
             List<PhotoSize> fixedWidth = resizePhoto.get("fixed_width");
             Optional<PhotoSize> foundPhoto = fixedWidth.stream()
@@ -98,10 +93,12 @@ public class PhotoServiceImpl implements PhotoService {
                     .findFirst();
             PhotoSize photoSize = foundPhoto.get();
 
-            return PhotoDto.builder()
-                    .fileAsByteArrays(photoSize.getPhotoAsByteArray())
-                    .mediaType(mediaType)
-                    .build();
+        } else {
+
         }
+        return PhotoDto.builder()
+                .fileAsByteArrays(savedPhoto.getOriginalPhoto())
+                .mediaType(mediaType)
+                .build();
     }
 }

@@ -12,13 +12,20 @@ import ru.sadykov.validation.PhotoExtension;
 @Order(1)
 public class PhotoExtensionValidator implements ConstraintValidator<PhotoExtension, MultipartFile> {
 
+    private String message;
+
+    @Override
+    public void initialize(PhotoExtension constraintAnnotation) {
+        this.message = constraintAnnotation.message();
+    }
+
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
         String originalFilename = file.getOriginalFilename();
         String photoExtension = Photos.getPhotoExtension(originalFilename).toLowerCase();
         if (!photoExtension.equals("png") && !photoExtension.equals("jpg")) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("{extensions.not.support}")
+            context.buildConstraintViolationWithTemplate(message)
                     .addConstraintViolation();
             return false;
         }
