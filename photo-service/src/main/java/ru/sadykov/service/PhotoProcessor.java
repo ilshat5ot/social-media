@@ -1,16 +1,17 @@
 package ru.sadykov.service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.awt.image.BufferedImage;
-import java.util.List;
 
 public interface PhotoProcessor {
 
-    BufferedImage readPhoto(String pathToPhotoAsString);
+    BufferedImage readPhoto(MultipartFile file);
 
-    void calculatePhotoHeight(int originalWidth, int originalHeight);
+    int calculatePhotoHeight(int originalWidth, int originalHeight, int newWidth);
 
-    List<BufferedImage> resizePhoto(BufferedImage inputImage);
+    BufferedImage resizePhoto(BufferedImage inputImage, int newWidth, int newHeight);
 
-    byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String photoExtension);
+    byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String imageExtension);
 
 }

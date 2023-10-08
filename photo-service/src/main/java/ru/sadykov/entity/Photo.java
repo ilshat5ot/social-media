@@ -9,8 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -24,6 +24,6 @@ public class Photo {
     private String id;
     private String fileName;
     private byte[] originalPhoto;
-    private HashMap<String, List<PhotoSize>> resizePhoto;
+    private Map<String, List<PhotoSize>> resizePhoto;
     private LocalDateTime dateTime;
 }

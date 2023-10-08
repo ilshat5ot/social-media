@@ -3,17 +3,18 @@ package ru.sadykov.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.sadykov.dto.RequestPhotoDto;
+import org.springframework.web.multipart.MultipartFile;
 import ru.sadykov.entity.Photo;
 import ru.sadykov.entity.PhotoSize;
 import ru.sadykov.repository.PhotoRepository;
+import ru.sadykov.util.Photos;
 
 import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,53 +23,45 @@ public class PhotoServiceImpl implements PhotoService {
     @Value("${base-url}")
     private String BASE_URL;
 
+    @Value("#{'${images.sizes}'.split(',')}")
+    private List<Integer> imagesWidth;
+
     private final PhotoRepository photoRepository;
     private final PhotoProcessor photoProcessor;
 
     @Override
-    public String savePhoto(RequestPhotoDto requestPhotoDto) {
+    public String savePhoto(MultipartFile file) {
 
-        /**
-         * Считываем фотографию в BufferedImage
-         */
-        BufferedImage originalPhoto = photoProcessor.readPhoto(requestPhotoDto.pathPhoto());
-
+        BufferedImage originalPhoto = photoProcessor.readPhoto(file);
         int originalWidth = originalPhoto.getWidth();
         int originalHeight = originalPhoto.getHeight();
+        Map<Integer, Integer> imageWidthAndHeight = imagesWidth.stream()
+                .collect(Collectors.toMap(
+                        key -> key,
+                        value -> photoProcessor.calculatePhotoHeight(originalWidth, originalHeight, value))
+                );
 
-        /**
-         * Рассчитываем размеры фотографий
-         */
+        String photoExtension = Photos.getImageExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        List<PhotoSize> photoSizes = imageWidthAndHeight.entrySet().stream()
+                .map(entry -> {
+                    int width = entry.getKey();
+                    int height = entry.getValue();
+                    BufferedImage bufferedImage = photoProcessor.resizePhoto(originalPhoto, width, height);
+                    byte[] photoAsByteArray = photoProcessor.convertPhotoToByteArray(bufferedImage, photoExtension);
+                    return new PhotoSize(width, height, photoAsByteArray);
+                })
+                .toList();
 
-        photoProcessor.calculatePhotoHeight(originalWidth, originalHeight);
-        /**
-         * Сжимаем до заданных размеров
-         */
+        byte[] originalImageAsByteArray = photoProcessor.convertPhotoToByteArray(originalPhoto, photoExtension);
 
-        List<BufferedImage> bufferedImages = photoProcessor.resizePhoto(originalPhoto);
-        var photoExtension = Photos.getPhotoExtension(requestPhotoDto.pathPhoto());
+        Photo transientPhoto = Photo.builder()
+                .fileName(file.getOriginalFilename())
+                .originalPhoto(originalImageAsByteArray)
+                .resizePhoto(Map.of("fixed_width", photoSizes))
+                .dateTime(LocalDateTime.now())
+                .build();
 
-        /**
-         * Конвертируем исходную фотографию в массив байт
-         */
-        byte[] originalPhotoAsByteArray = photoProcessor.convertPhotoToByteArray(originalPhoto, photoExtension);
-
-        /**
-         * Получаем массив байт сжатых фотографий
-         */
-        List<byte[]> resizePhotoAsByteArray = new ArrayList<>();
-        for (BufferedImage bufferedImage : bufferedImages) {
-            resizePhotoAsByteArray.add(photoProcessor.convertPhotoToByteArray(bufferedImage, photoExtension));
-        }
-        Set<Integer> listPhotoSize = FinalPhotoDimensions.photoSize.keySet();
-
-        /**
-         * Заполняем данные для сохранения в бд
-         */
-        Photo transientPhoto = fillPhoto(requestPhotoDto, originalPhotoAsByteArray, resizePhotoAsByteArray, listPhotoSize);
-
-        var savedPhoto = photoRepository.save(transientPhoto);
-
+        Photo savedPhoto = photoRepository.save(transientPhoto);
         return BASE_URL + savedPhoto.getId();
     }
 
@@ -78,31 +71,5 @@ public class PhotoServiceImpl implements PhotoService {
                 .findById(photoId)
                 .orElseThrow(() -> new RuntimeException("Фото не найдено!"));
         return savedPhoto;
-    }
-
-    private Photo fillPhoto(RequestPhotoDto requestPhotoDto,
-                            byte[] originalPhotoAsByteArray,
-                            List<byte[]> resizePhotoAsByteArray,
-                            Set<Integer> listPhotoSize) {
-        HashMap<String, List<PhotoSize>> map = new HashMap<>();
-        List<PhotoSize> list = new ArrayList<>();
-        int i = 0;
-        for (Integer width : listPhotoSize) {
-            PhotoSize photoSize = new PhotoSize();
-            photoSize.setWidth(width);
-            photoSize.setHeight(FinalPhotoDimensions.photoSize.get(width));
-            photoSize.setPhotoAsByteArray(resizePhotoAsByteArray.get(i++));
-            list.add(photoSize);
-        }
-        map.put("fixed_width", list);
-
-        var photoName = Photos.getPhotoName(requestPhotoDto.pathPhoto());
-        return Photo
-                .builder()
-                .fileName(photoName)
-                .originalPhoto(originalPhotoAsByteArray)
-                .resizePhoto(map)
-                .dateTime(LocalDateTime.now())
-                .build();
     }
 }
