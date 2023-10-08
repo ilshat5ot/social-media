@@ -5,7 +5,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Photos {
 
-    public String getImageExtension(String fileName) {
+    public String getPhotoExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf(".");
         if (lastDotIndex != -1) {
             return fileName.substring(lastDotIndex + 1);

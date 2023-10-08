@@ -15,7 +15,7 @@ public class PhotoExtensionValidator implements ConstraintValidator<PhotoExtensi
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
         String originalFilename = file.getOriginalFilename();
-        String photoExtension = Photos.getImageExtension(originalFilename).toLowerCase();
+        String photoExtension = Photos.getPhotoExtension(originalFilename).toLowerCase();
         if (!photoExtension.equals("png") && !photoExtension.equals("jpg")) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("{extensions.not.support}")

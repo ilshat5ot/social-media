@@ -44,8 +44,8 @@ public class PhotoController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(photo);
+                .contentType(photo.mediaType())
+                .body(photo.fileAsByteArrays());
     }
 
 }

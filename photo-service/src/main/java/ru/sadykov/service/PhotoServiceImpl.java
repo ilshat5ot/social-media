@@ -2,6 +2,7 @@ package ru.sadykov.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.sadykov.dto.PhotoDto;
@@ -46,7 +47,7 @@ public class PhotoServiceImpl implements PhotoService {
                         value -> photoProcessor.calculatePhotoHeight(originalWidth, originalHeight, value))
                 );
 
-        String photoExtension = Photos.getImageExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        String photoExtension = Photos.getPhotoExtension(Objects.requireNonNull(file.getOriginalFilename()));
         List<PhotoSize> photoSizes = imageWidthAndHeight.entrySet().stream()
                 .map(entry -> {
                     int width = entry.getKey();
@@ -76,10 +77,18 @@ public class PhotoServiceImpl implements PhotoService {
                 .findById(photoId)
                 .orElseThrow(() -> new PhotoNotFoundException(localizationExceptionMessage.getPhotoNotFoundExc()));
 
+        String photoExtension = Photos.getPhotoExtension(savedPhoto.getFileName());
+        MediaType mediaType;
+        if (photoExtension.equals("png")) {
+            mediaType = MediaType.IMAGE_PNG;
+        } else {
+            mediaType = MediaType.IMAGE_JPEG;
+        }
+
         if (width == null || height == null) {
             return PhotoDto.builder()
-                    .fileName(savedPhoto.getFileName())
                     .fileAsByteArrays(savedPhoto.getOriginalPhoto())
+                    .mediaType(mediaType)
                     .build();
         } else {
             Map<String, List<PhotoSize>> resizePhoto = savedPhoto.getResizePhoto();
@@ -90,10 +99,8 @@ public class PhotoServiceImpl implements PhotoService {
             PhotoSize photoSize = foundPhoto.get();
 
             return PhotoDto.builder()
-                    .fileName(savedPhoto.getFileName())
-                    .width(photoSize.getWidth())
-                    .height(photoSize.getHeight())
                     .fileAsByteArrays(photoSize.getPhotoAsByteArray())
+                    .mediaType(mediaType)
                     .build();
         }
     }
