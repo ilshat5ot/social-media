@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.sadykov.dto.ExceptionMessageDto;
 import ru.sadykov.dto.ValidationErrorResponse;
 import ru.sadykov.dto.Violation;
+import ru.sadykov.exception.exceptions.InputReadException;
 
 import java.util.List;
 

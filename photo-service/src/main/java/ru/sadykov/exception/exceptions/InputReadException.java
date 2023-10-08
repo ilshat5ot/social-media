@@ -1,4 +1,4 @@
-package ru.sadykov.exception;
+package ru.sadykov.exception.exceptions;
 
 public class InputReadException extends RuntimeException {
 

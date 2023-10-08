@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.sadykov.dto.PhotoDto;
 import ru.sadykov.entity.Photo;
 import ru.sadykov.entity.PhotoSize;
+import ru.sadykov.exception.exceptions.PhotoNotFoundException;
+import ru.sadykov.localization.LocalizationExceptionMessage;
 import ru.sadykov.repository.PhotoRepository;
 import ru.sadykov.util.Photos;
 
@@ -14,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +32,7 @@ public class PhotoServiceImpl implements PhotoService {
 
     private final PhotoRepository photoRepository;
     private final PhotoProcessor photoProcessor;
+    private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Override
     public String savePhoto(MultipartFile file) {
@@ -66,10 +71,30 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public Photo getPhoto(String photoId) {
+    public PhotoDto getPhoto(String photoId, Integer width, Integer height) {
         var savedPhoto = photoRepository
                 .findById(photoId)
-                .orElseThrow(() -> new RuntimeException("Фото не найдено!"));
-        return savedPhoto;
+                .orElseThrow(() -> new PhotoNotFoundException(localizationExceptionMessage.getPhotoNotFoundExc()));
+
+        if (width == null || height == null) {
+            return PhotoDto.builder()
+                    .fileName(savedPhoto.getFileName())
+                    .fileAsByteArrays(savedPhoto.getOriginalPhoto())
+                    .build();
+        } else {
+            Map<String, List<PhotoSize>> resizePhoto = savedPhoto.getResizePhoto();
+            List<PhotoSize> fixedWidth = resizePhoto.get("fixed_width");
+            Optional<PhotoSize> foundPhoto = fixedWidth.stream()
+                    .filter(photoSize -> width.equals(photoSize.getWidth()) && height.equals(photoSize.getHeight()))
+                    .findFirst();
+            PhotoSize photoSize = foundPhoto.get();
+
+            return PhotoDto.builder()
+                    .fileName(savedPhoto.getFileName())
+                    .width(photoSize.getWidth())
+                    .height(photoSize.getHeight())
+                    .fileAsByteArrays(photoSize.getPhotoAsByteArray())
+                    .build();
+        }
     }
 }

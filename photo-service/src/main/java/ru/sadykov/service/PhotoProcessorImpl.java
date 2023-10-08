@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.sadykov.aspect.Loggable;
-import ru.sadykov.exception.InputReadException;
+import ru.sadykov.exception.exceptions.InputReadException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import javax.imageio.ImageIO;
@@ -24,8 +24,7 @@ public class PhotoProcessorImpl implements PhotoProcessor {
     @Override
     public BufferedImage readPhoto(MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
-            throw new IOException();
-//            return ImageIO.read(is);
+            return ImageIO.read(is);
         } catch (IOException e) {
             throw new InputReadException(localizationExceptionMessage.getFileReadingExc());
         }
@@ -56,5 +55,4 @@ public class PhotoProcessorImpl implements PhotoProcessor {
             throw new InputReadException(localizationExceptionMessage.getBufferImageReadingExc());
         }
     }
-
 }

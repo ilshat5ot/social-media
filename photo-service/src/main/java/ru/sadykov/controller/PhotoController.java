@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.sadykov.service.PhotoService;
@@ -36,13 +37,15 @@ public class PhotoController {
     }
 
     @GetMapping("/{photoId}")
-    public ResponseEntity<?> getPhoto(@PathVariable String photoId) {
-        var photo = photoService.getPhoto(photoId);
+    public ResponseEntity<?> getPhoto(@PathVariable String photoId,
+                                      @RequestParam(required = false) Integer width,
+                                      @RequestParam(required = false) Integer height) {
+        var photo = photoService.getPhoto(photoId, width, height);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .contentType(MediaType.IMAGE_PNG)
-                .body(null);
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(photo);
     }
 
 }
