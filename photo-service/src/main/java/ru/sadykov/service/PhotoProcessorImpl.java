@@ -1,8 +1,11 @@
 package ru.sadykov.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.sadykov.aspect.Loggable;
+import ru.sadykov.exception.InputReadException;
+import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;
@@ -12,15 +15,19 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Service
+@RequiredArgsConstructor
 public class PhotoProcessorImpl implements PhotoProcessor {
+
+    private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Loggable
     @Override
     public BufferedImage readPhoto(MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
-            return ImageIO.read(is);
+            throw new IOException();
+//            return ImageIO.read(is);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InputReadException(localizationExceptionMessage.getFileReadingExc());
         }
     }
 
@@ -42,12 +49,11 @@ public class PhotoProcessorImpl implements PhotoProcessor {
     @Loggable
     @Override
     public byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String imageExtension) {
-
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             ImageIO.write(bufferedImage, imageExtension, baos);
             return baos.toByteArray();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InputReadException(localizationExceptionMessage.getBufferImageReadingExc());
         }
     }
 
