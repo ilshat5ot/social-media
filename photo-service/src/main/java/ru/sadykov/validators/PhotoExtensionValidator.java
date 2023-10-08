@@ -15,11 +15,12 @@ public class PhotoExtensionValidator implements ConstraintValidator<PhotoExtensi
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
         String originalFilename = file.getOriginalFilename();
-        String photoExtension = Photos.getImageExtension(originalFilename);
-        if (!photoExtension.equals("png") || !photoExtension.equals("jpg")) {
+        String photoExtension = Photos.getImageExtension(originalFilename).toLowerCase();
+        if (!photoExtension.equals("png") && !photoExtension.equals("jpg")) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("{extensions.not.support}")
-                    .addPropertyNode("file").addConstraintViolation();
+                    .addConstraintViolation();
+            return false;
         }
         return true;
     }

@@ -14,6 +14,12 @@ public class PhotoNotNullValidator implements ConstraintValidator<PhotoNotNull, 
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
         String originalFilename = file.getOriginalFilename();
-        return originalFilename == null || originalFilename.trim().equals("");
+        if (originalFilename == null || originalFilename.trim().equals("")) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("{photo.not.null}")
+                    .addConstraintViolation();
+            return false;
+        }
+        return true;
     }
 }

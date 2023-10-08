@@ -2,6 +2,7 @@ package ru.sadykov.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.sadykov.aspect.Loggable;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 @Service
 public class PhotoProcessorImpl implements PhotoProcessor {
 
+    @Loggable
     @Override
     public BufferedImage readPhoto(MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
@@ -22,11 +24,13 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         }
     }
 
+    @Loggable
     @Override
     public int calculatePhotoHeight(int originalWidth, int originalHeight, int newWidth) {
         return (int) Math.round(originalHeight * (double) newWidth / originalWidth);
     }
 
+    @Loggable
     @Override
     public BufferedImage resizePhoto(BufferedImage inputImage, int newWidth, int newHeight) {
         Image resultingImage = inputImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
@@ -35,6 +39,7 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         return outputImage;
     }
 
+    @Loggable
     @Override
     public byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String imageExtension) {
 
