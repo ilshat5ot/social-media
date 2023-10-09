@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
-import ru.sadykov.exception.exceptions.DeleteUserFromFriendsException;
-import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.exception.exceptions.AddingAsAFriendException;
+import ru.sadykov.exception.exceptions.UnfriendingException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 import ru.sadykov.repository.FriendshipRepository;
 import ru.sadykov.service.FriendshipService;
@@ -15,7 +15,6 @@ import ru.sadykov.service.deletefriend.DeletionConditionHandler;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -71,25 +70,20 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         if (optionalFriendship.isPresent()) {
             Friendship friendship = optionalFriendship.get();
-            if (friendship.isArchive()) {
-                throw new DeleteUserFromFriendsException(localizationExceptionMessage.getDeleteHimselfExc());
-            } else {
-                 return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
-            }
-        } else {
-            throw new DeleteUserFromFriendsException(localizationExceptionMessage.getDeleteHimselfExc());
+            return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
         }
+        throw new UnfriendingException(localizationExceptionMessage.getDeleteYourselfExc());
     }
 
     private void checkingDeleteYourself(Long currentUserId, Long targetId) {
         if (currentUserId.equals(targetId)) {
-            throw new AddAsAFriendException(localizationExceptionMessage.getDeleteHimselfExc());
+            throw new AddingAsAFriendException(localizationExceptionMessage.getDeleteYourselfExc());
         }
     }
 
     private void checkingYourself(Long currentUserId, Long targetId) {
         if (currentUserId.equals(targetId)) {
-            throw new AddAsAFriendException(localizationExceptionMessage.getAddFromFriendsExc());
+            throw new AddingAsAFriendException(localizationExceptionMessage.getAddYourselfExc());
         }
     }
 

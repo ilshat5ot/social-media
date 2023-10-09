@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
-import ru.sadykov.exception.exceptions.DeleteUserFromFriendsException;
+import ru.sadykov.exception.exceptions.InvalidRequestException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import java.util.List;
@@ -19,15 +19,11 @@ public class DeletionConditionHandler {
 
     public FriendshipDto handleConditionsForDeletingFriending(Friendship friendship, Long currentUserId) {
 
-        Optional<FriendshipDto> response;
-
-        for (ConditionsForDeletingFriend conditions : conditionsForDeletingFriends) {
-            response = conditions.processTheTermsOfDeletingFromFriends(friendship, currentUserId);
-
-            if (response.isPresent()) {
-                return response.get();
-            }
-        }
-        throw new DeleteUserFromFriendsException(localizationExceptionMessage.getInvalidRequestExc());
+        return conditionsForDeletingFriends.stream()
+                .map(conditions -> conditions.processTheTermsOfDeletingFromFriends(friendship, currentUserId))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .orElseThrow(() -> new InvalidRequestException(localizationExceptionMessage.getInvalidRequestExc()));
     }
 }

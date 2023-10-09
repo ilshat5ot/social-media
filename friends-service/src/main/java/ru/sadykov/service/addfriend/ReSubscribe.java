@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
-import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.exception.exceptions.AddingAsAFriendException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import java.util.Optional;
@@ -22,7 +22,7 @@ public class ReSubscribe implements ConditionForAddingAsFriend {
     public Optional<FriendshipDto> processTheTermsOfFriendship(Friendship friendship, Long currentUserId) {
         if (friendship.getRelationshipStatus().equals(RelationshipStatus.SUBSCRIBER)
                 && currentUserId.equals(friendship.getTargetUser())) {
-            throw new AddAsAFriendException(localizationExceptionMessage.getLeftAsASubExc());
+            throw new AddingAsAFriendException(localizationExceptionMessage.getAddLeaveInSubExc());
         }
         return Optional.empty();
     }

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class YouAreAFriend implements ConditionsForDeletingFriend {
+public class RequestForFriendship implements ConditionsForDeletingFriend {
 
     private final FriendshipRepository friendshipRepository;
 
@@ -21,17 +21,16 @@ public class YouAreAFriend implements ConditionsForDeletingFriend {
 
         Friendship savedFriendship = new Friendship();
 
-        if (friendship.getRelationshipStatus().equals(RelationshipStatus.FRIEND) &&
-                friendship.getSourceUser().equals(currentUser) && !friendship.isArchive()) {
+        if (friendship.getRelationshipStatus().equals(RelationshipStatus.APPLICATION) &&
+                friendship.getTargetUser().equals(currentUser) && !friendship.isArchive()) {
+
             friendship.setRelationshipStatus(RelationshipStatus.SUBSCRIBER);
-            friendship.setSourceUser(friendship.getTargetUser());
-            friendship.setTargetUser(currentUser);
             friendship.setTimeOfCreation(LocalDateTime.now().toString());
 
             savedFriendship = friendshipRepository.save(friendship);
-        } else if (friendship.getRelationshipStatus().equals(RelationshipStatus.FRIEND) &&
-                friendship.getTargetUser().equals(currentUser) && !friendship.isArchive()) {
-            friendship.setRelationshipStatus(RelationshipStatus.SUBSCRIBER);
+        } else if (friendship.getRelationshipStatus().equals(RelationshipStatus.APPLICATION) &&
+                friendship.getSourceUser().equals(currentUser) && !friendship.isArchive()) {
+            friendship.setArchive(true);
             friendship.setTimeOfCreation(LocalDateTime.now().toString());
 
             savedFriendship = friendshipRepository.save(friendship);

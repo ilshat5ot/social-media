@@ -24,5 +24,3 @@ public interface FriendshipService {
      */
     FriendshipDto deleteFromFriends(Long currentUserId, Long targetId);
 }
-
-
