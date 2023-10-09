@@ -17,10 +17,12 @@ public class LocalizationExceptionMessage {
     private final String addReapplicationExc;
     private final String addAreYouASubExc;
     private final String addLeaveInSubExc;
-    private final String invalidRequestExc;
     private final String deleteYourselfExc;
     private final String deleteUserAreSubExc;
     private final String deleteFriendExc;
+    private final String invalidRequestExc;
+    private final String friendshipNotFoundExc;
+
 
     public LocalizationExceptionMessage() {
         this.locale = Locale.getDefault();
@@ -34,6 +36,8 @@ public class LocalizationExceptionMessage {
         deleteYourselfExc = ms.getMessage("delete.yourself");
         deleteUserAreSubExc = ms.getMessage("delete.subscriber");
         deleteFriendExc = ms.getMessage("delete.friend");
+
+        friendshipNotFoundExc = ms.getMessage("Запись о дружбе не найдена!");
 
         invalidRequestExc = ms.getMessage("invalid.request");
     }

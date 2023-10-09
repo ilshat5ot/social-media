@@ -32,7 +32,7 @@ public class YouAreASubscriber implements ConditionsForDeletingFriend {
                 && friendship.getTargetUser().equals(currentUser) && !friendship.isArchive()) {
             throw new UnfriendingException(localizationExceptionMessage.getDeleteFriendExc());
         }
-        if (savedFriendship.getId().equals(0L)) {
+        if (savedFriendship.getId() == null) {
             return Optional.empty();
         }
         return Optional.of(FriendshipDto

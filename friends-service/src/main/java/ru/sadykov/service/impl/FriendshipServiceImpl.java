@@ -6,7 +6,7 @@ import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
 import ru.sadykov.exception.exceptions.AddingAsAFriendException;
-import ru.sadykov.exception.exceptions.UnfriendingException;
+import ru.sadykov.exception.exceptions.FriendshipNotFoundException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 import ru.sadykov.repository.FriendshipRepository;
 import ru.sadykov.service.FriendshipService;
@@ -65,14 +65,11 @@ public class FriendshipServiceImpl implements FriendshipService {
     public FriendshipDto deleteFromFriends(Long currentUserId, Long targetId) {
         checkingDeleteYourself(currentUserId, targetId);
 
-        Optional<Friendship> optionalFriendship = friendshipRepository
-                .findByTargetUserAndSourceUser(currentUserId, targetId);
+        Friendship friendship = friendshipRepository
+                .findByTargetUserAndSourceUser(currentUserId, targetId)
+                .orElseThrow(() -> new FriendshipNotFoundException(localizationExceptionMessage.getFriendshipNotFoundExc()));
 
-        if (optionalFriendship.isPresent()) {
-            Friendship friendship = optionalFriendship.get();
-            return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
-        }
-        throw new UnfriendingException(localizationExceptionMessage.getDeleteYourselfExc());
+        return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
     }
 
     private void checkingDeleteYourself(Long currentUserId, Long targetId) {

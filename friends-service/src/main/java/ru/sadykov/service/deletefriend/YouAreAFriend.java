@@ -36,7 +36,7 @@ public class YouAreAFriend implements ConditionsForDeletingFriend {
 
             savedFriendship = friendshipRepository.save(friendship);
         }
-        if (savedFriendship.getId().equals(0L)) {
+        if (savedFriendship.getId() == null) {
             return Optional.empty();
         }
         return Optional.of(FriendshipDto
