@@ -1,31 +1,44 @@
 package ru.sadykov.localization;
 
 import lombok.Getter;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
 @Getter
+@Component
 public class LocalizationExceptionMessage {
 
     private final ExceptionMessageSource ms = new ExceptionMessageSource();
-
     private final Locale locale;
 
-    private final String addFromFriendsExc;
-    private final String isAFriendExc;
-    private final String applicationHasAlreadyBeenSentExc;
-    private final String areYouASubExc;
-    private final String leftAsASubExc;
-    private final String invalidRequest;
+    private final String addYourselfExc;
+    private final String addAsFriendExc;
+    private final String addReapplicationExc;
+    private final String addAreYouASubExc;
+    private final String addLeaveInSubExc;
+    private final String deleteYourselfExc;
+    private final String deleteUserAreSubExc;
+    private final String deleteFriendExc;
+    private final String invalidRequestExc;
+    private final String friendshipNotFoundExc;
 
-    public LocalizationExceptionMessage(Locale locale) {
-        this.locale = locale;
 
-        addFromFriendsExc = ms.getMessage("add.from.friends", null, locale);
-        isAFriendExc = ms.getMessage("is.a.friend", null, locale);
-        applicationHasAlreadyBeenSentExc = ms.getMessage("application.has.already.been.sent", null, locale);
-        areYouASubExc = ms.getMessage("are.you.a.sub", null, locale);
-        leftAsASubExc = ms.getMessage("left.as.a.sub", null, locale);
-        invalidRequest = ms.getMessage("invalid.request", null, locale);
+    public LocalizationExceptionMessage() {
+        this.locale = Locale.getDefault();
+
+        addYourselfExc = ms.getMessage("add.yourself");
+        addAsFriendExc = ms.getMessage("add.as.friend");
+        addReapplicationExc = ms.getMessage("add.reapplication");
+        addAreYouASubExc = ms.getMessage("add.are.you.a.sub");
+        addLeaveInSubExc = ms.getMessage("add.leave.in.sub");
+
+        deleteYourselfExc = ms.getMessage("delete.yourself");
+        deleteUserAreSubExc = ms.getMessage("delete.subscriber");
+        deleteFriendExc = ms.getMessage("delete.friend");
+
+        friendshipNotFoundExc = ms.getMessage("Запись о дружбе не найдена!");
+
+        invalidRequestExc = ms.getMessage("invalid.request");
     }
 }

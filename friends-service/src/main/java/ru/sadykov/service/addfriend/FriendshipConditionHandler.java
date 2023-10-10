@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
-import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.exception.exceptions.AddingAsAFriendException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import java.util.List;
@@ -27,6 +27,6 @@ public class FriendshipConditionHandler {
                 return serviceResponse.get();
             }
         }
-        throw new AddAsAFriendException(localizationExceptionMessage.getInvalidRequest());
+        throw new AddingAsAFriendException(localizationExceptionMessage.getInvalidRequestExc());
     }
 }

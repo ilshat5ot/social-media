@@ -27,15 +27,15 @@ public class Friendship {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false)
-    private RelationshipStatus relationshipStatus;
+    private Long sourceUser;
 
     @Column(nullable = false)
     private Long targetUser;
 
+    @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false)
-    private Long sourceUser;
+    private RelationshipStatus relationshipStatus;
 
     @Column(nullable = false)
     private String timeOfCreation;

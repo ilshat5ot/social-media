@@ -5,15 +5,16 @@ import org.springframework.stereotype.Service;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
-import ru.sadykov.exception.exceptions.AddAsAFriendException;
+import ru.sadykov.exception.exceptions.AddingAsAFriendException;
+import ru.sadykov.exception.exceptions.FriendshipNotFoundException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 import ru.sadykov.repository.FriendshipRepository;
 import ru.sadykov.service.FriendshipService;
 import ru.sadykov.service.addfriend.FriendshipConditionHandler;
+import ru.sadykov.service.deletefriend.DeletionConditionHandler;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private final FriendshipRepository friendshipRepository;
     private final FriendshipConditionHandler friendshipConditionHandler;
+    private final DeletionConditionHandler deletionConditionHandler;
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Override
@@ -43,14 +45,12 @@ public class FriendshipServiceImpl implements FriendshipService {
                         .targetUserId(savedFriendship.getTargetUser())
                         .relationshipStatus(savedFriendship.getRelationshipStatus())
                         .build();
-
             } else {
                 return friendshipConditionHandler.handleFriendshipStatus(friendship, currentUserId);
             }
         } else {
             Friendship newFriendship = fillFriend(currentUserId, userId, RelationshipStatus.APPLICATION, LocalDateTime.now(), false);
             Friendship savedFriendship = friendshipRepository.save(newFriendship);
-
             return FriendshipDto
                     .builder()
                     .id(savedFriendship.getId())
@@ -61,9 +61,26 @@ public class FriendshipServiceImpl implements FriendshipService {
         }
     }
 
-    private void checkingYourself(Long currentUserId, Long userId) {
-        if (currentUserId.equals(userId)) {
-            throw new AddAsAFriendException(localizationExceptionMessage.getAddFromFriendsExc());
+    @Override
+    public FriendshipDto deleteFromFriends(Long currentUserId, Long targetId) {
+        checkingDeleteYourself(currentUserId, targetId);
+
+        Friendship friendship = friendshipRepository
+                .findByTargetUserAndSourceUser(currentUserId, targetId)
+                .orElseThrow(() -> new FriendshipNotFoundException(localizationExceptionMessage.getFriendshipNotFoundExc()));
+
+        return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
+    }
+
+    private void checkingDeleteYourself(Long currentUserId, Long targetId) {
+        if (currentUserId.equals(targetId)) {
+            throw new AddingAsAFriendException(localizationExceptionMessage.getDeleteYourselfExc());
+        }
+    }
+
+    private void checkingYourself(Long currentUserId, Long targetId) {
+        if (currentUserId.equals(targetId)) {
+            throw new AddingAsAFriendException(localizationExceptionMessage.getAddYourselfExc());
         }
     }
 
