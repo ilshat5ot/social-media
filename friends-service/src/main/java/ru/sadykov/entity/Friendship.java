@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.sadykov.entity.enums.RelationshipStatus;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "friendship")
 
@@ -28,18 +30,18 @@ public class Friendship {
     private Long id;
 
     @Column(nullable = false)
-    private Long sourceUser;
+    private Long sourceUserId;
 
     @Column(nullable = false)
-    private Long targetUser;
+    private Long targetUserId;
 
     @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false)
     private RelationshipStatus relationshipStatus;
 
     @Column(nullable = false)
-    private String timeOfCreation;
+    private LocalDateTime timeOfCreation;
 
-    @Column(nullable = false)
-    private boolean isArchive;
+    @Column( name = "is_archive", nullable = false)
+    private boolean archive;
 }

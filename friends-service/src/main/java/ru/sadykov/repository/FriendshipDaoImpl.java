@@ -20,19 +20,19 @@ public class FriendshipDaoImpl implements FriendshipDao {
     private final EntityManager em;
 
     @Override
-    public Optional<Friendship> findByTargetUserAndSourceUser(Long targetUser, Long sourceUser) {
+    public Optional<Friendship> findByTargetUserAndSourceUser(Long targetUserId, Long sourceUserId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Friendship> cq = cb.createQuery(Friendship.class);
 
         Root<Friendship> friendship = cq.from(Friendship.class);
 
         Predicate friendshipPredicateOne = cb.and(
-                cb.equal(friendship.get("sourceUser"), targetUser),
-                cb.equal(friendship.get("targetUser"), sourceUser)
+                cb.equal(friendship.get("sourceUserId"), targetUserId),
+                cb.equal(friendship.get("targetUserId"), sourceUserId)
         );
         Predicate friendshipPredicateTwo = cb.and(
-                cb.equal(friendship.get("targetUser"), targetUser),
-                cb.equal(friendship.get("sourceUser"), sourceUser)
+                cb.equal(friendship.get("targetUserId"), targetUserId),
+                cb.equal(friendship.get("sourceUserId"), sourceUserId)
         );
         Predicate friendshipPredicate = cb.or(friendshipPredicateOne, friendshipPredicateTwo);
         cq.where(friendshipPredicate);

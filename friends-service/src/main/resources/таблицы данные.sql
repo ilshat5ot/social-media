@@ -11,14 +11,14 @@ create schema if not exists friends;
 create table friends.friendship
 (
     id bigserial not null primary key,
-    source_user  bigint not null,
-    target_user bigint not null,
+    source_user_id  bigint not null,
+    target_user_id bigint not null,
     relationship_status varchar(3) not null,
-    time_of_creation varchar(30) not null,
+    time_of_creation timestamp not null,
     is_archive boolean not null,
 
-    foreign key (target_user) references security.users(id),
-    foreign key (source_user) references security.users(id)
+    foreign key (target_user_id) references security.users(id),
+    foreign key (source_user_id) references security.users(id)
 );
 
 drop table friends.friendship;

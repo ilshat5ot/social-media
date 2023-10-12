@@ -1,27 +1,36 @@
 package ru.sadykov.service.impl;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
+import ru.sadykov.exception.exceptions.FriendshipNotFoundException;
+import ru.sadykov.exception.exceptions.UnfriendingException;
+import ru.sadykov.localization.LocalizationExceptionMessage;
+import ru.sadykov.mapper.FriendshipMapper;
 import ru.sadykov.repository.FriendshipRepository;
+import ru.sadykov.service.addfriend.AddConditionHandler;
+import ru.sadykov.service.deletefriend.ArchiveRecordingDel;
 import ru.sadykov.service.deletefriend.DeletionConditionHandler;
+import ru.sadykov.service.deletefriend.RequestForFriendshipDel;
+import ru.sadykov.service.deletefriend.YouAreAFriendDel;
+import ru.sadykov.service.deletefriend.YouAreASubscriberDel;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,92 +43,197 @@ class FriendshipServiceImplTest {
     FriendshipRepository friendshipRepository;
 
     @Mock
-    DeletionConditionHandler deletionConditionHandler;
+    AddConditionHandler addConditionHandler;
 
-    private static Friendship statusFriend;
-    private static Friendship statusApplication;
-    private static Friendship statusSubscriber;
-    private static Friendship friendshipIsArchive;
-
-    private static Long sourceUserId = 1L;
-    private static Long targetUserId = 2L;
+    LocalizationExceptionMessage localizationExceptionMessage;
 
     @BeforeEach
-    void prepareDate() {
-        statusFriend = new Friendship(1L, 1L, 2L,
-                RelationshipStatus.FRIEND, LocalDateTime.now().toString(), false);
+    public void setUp() {
+        var friendshipMapper = Mappers.getMapper(FriendshipMapper.class);
+        localizationExceptionMessage = new LocalizationExceptionMessage();
 
-        statusApplication = new Friendship(1L, 1L, 2L,
-                RelationshipStatus.APPLICATION, LocalDateTime.now().toString(), false);
+        var youAreAFriendDel = new YouAreAFriendDel(friendshipRepository, friendshipMapper);
+        var youAreASubscriberDel = new YouAreASubscriberDel(friendshipRepository, localizationExceptionMessage, friendshipMapper);
+        var requestForFriendshipDel = new RequestForFriendshipDel(friendshipRepository, friendshipMapper);
+        var archiveRecordingDel = new ArchiveRecordingDel(localizationExceptionMessage);
 
-        statusSubscriber = new Friendship(1L, 1L, 2L,
-                RelationshipStatus.SUBSCRIBER, LocalDateTime.now().toString(), false);
+        var conditions =
+                List.of(youAreAFriendDel, youAreASubscriberDel, requestForFriendshipDel, archiveRecordingDel);
 
-        friendshipIsArchive = new Friendship(1L, 1L, 2L,
-                RelationshipStatus.APPLICATION, LocalDateTime.now().toString(), true);
+        var deletionConditionHandler =
+                new DeletionConditionHandler(conditions, localizationExceptionMessage);
+
+        friendshipService = new FriendshipServiceImpl(
+                friendshipRepository,
+                addConditionHandler,
+                deletionConditionHandler,
+                localizationExceptionMessage,
+                friendshipMapper);
+    }
+
+    @DisplayName("Запись о дружбе не найдена")
+    @Test
+    void testDeleteFromFriendsThrowFriendshipNotFoundException() {
+
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var friendshipNotFoundExc = localizationExceptionMessage.getFriendshipNotFoundExc();
+
+        when(friendshipRepository.findByTargetUserAndSourceUser(any(), any()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(FriendshipNotFoundException.class,
+                () -> friendshipService.deleteFromFriends(currentUserId, targetUserId),
+                friendshipNotFoundExc
+        );
     }
 
     @Test
-    @DisplayName("Проверка удаления из друзей один")
-    void testDeleteFromFriendsOne_Success() {
-        // Arrange
-        when(friendshipRepository.findByTargetUserAndSourceUser(any(), any())).thenReturn(Optional.of(statusFriend));
+    @DisplayName("Удаление из друзей. Статус \"Дружба\". currentUserId == sourceUserId")
+    void testDeleteFromFriendsStatusFriendSuccessOne() {
 
-        FriendshipDto expectedDto = FriendshipDto.builder()
-                .id(statusFriend.getId())
-                .relationshipStatus(RelationshipStatus.SUBSCRIBER)
-                .sourceUserId(statusFriend.getSourceUser())
-                .targetUserId(statusFriend.getTargetUser())
-                .isArchive(statusFriend.isArchive())
-                .build();
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusSub = RelationshipStatus.SUBSCRIBER;
 
-        when(deletionConditionHandler.handleConditionsForDeletingFriending(any(), any())).thenReturn(expectedDto);
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                RelationshipStatus.FRIEND, LocalDateTime.now(), false);
+        var savedFriendship = new Friendship(1L, targetUserId, currentUserId,
+                statusSub, LocalDateTime.now(), false);
 
-        // Act
-        FriendshipDto result = friendshipService.deleteFromFriends(sourceUserId, targetUserId);
+        when(friendshipRepository.findByTargetUserAndSourceUser(currentUserId, targetUserId)).thenReturn(Optional.of(foundFriendship));
+        when(friendshipRepository.save(any())).thenReturn(savedFriendship);
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(currentUserId, targetUserId);
 
-        // Assert
         assertAll(
-                () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.isArchive()).isFalse(),
-                () -> assertThat(result.sourceUserId()).isEqualTo(sourceUserId),
-                () -> assertThat(result.relationshipStatus()).isEqualTo(RelationshipStatus.SUBSCRIBER)
+                () -> assertThat(friendshipDto).isNotNull(),
+                () -> assertThat(friendshipDto.relationshipStatus()).isEqualTo(statusSub),
+                () -> assertThat(friendshipDto.sourceUserId()).isEqualTo(targetUserId),
+                () -> assertThat(friendshipDto.targetUserId()).isEqualTo(currentUserId),
+                () -> assertThat(friendshipDto.archive()).isFalse()
         );
-        verify(friendshipRepository, times(1))
-                .findByTargetUserAndSourceUser(sourceUserId, targetUserId);
-        verify(deletionConditionHandler, times(1))
-                .handleConditionsForDeletingFriending(statusFriend, sourceUserId);
     }
 
     @Test
-    @DisplayName("Проверка удаления из друзей два")
-    void testDeleteFromFriendsTwo_Success() {
-        // Arrange
-        when(friendshipRepository.findByTargetUserAndSourceUser(targetUserId, sourceUserId)).thenReturn(Optional.of(statusFriend));
+    @DisplayName("Удаление из друзей. Статус \"Дружба\". currentUserId == targetUserId")
+    void testDeleteFromFriendsStatusFriendSuccessTwo() {
 
-        FriendshipDto expectedDto = FriendshipDto.builder()
-                .id(statusFriend.getId())
-                .relationshipStatus(RelationshipStatus.SUBSCRIBER)
-                .sourceUserId(statusFriend.getTargetUser())
-                .targetUserId(statusFriend.getSourceUser())
-                .isArchive(statusFriend.isArchive())
-                .build();
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusSub = RelationshipStatus.SUBSCRIBER;
 
-        when(deletionConditionHandler.handleConditionsForDeletingFriending(any(), any())).thenReturn(expectedDto);
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                RelationshipStatus.FRIEND, LocalDateTime.now(), false);
+        var savedFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusSub, LocalDateTime.now(), false);
 
-        // Act
-        FriendshipDto result = friendshipService.deleteFromFriends(targetUserId , sourceUserId);
+        when(friendshipRepository.findByTargetUserAndSourceUser(targetUserId, currentUserId)).thenReturn(Optional.of(foundFriendship));
+        when(friendshipRepository.save(any())).thenReturn(savedFriendship);
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(targetUserId, currentUserId);
 
-        // Assert
         assertAll(
-                () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.isArchive()).isFalse(),
-                () -> assertThat(result.sourceUserId()).isEqualTo(targetUserId),
-                () -> assertThat(result.relationshipStatus()).isEqualTo(RelationshipStatus.SUBSCRIBER)
+                () -> assertThat(friendshipDto).isNotNull(),
+                () -> assertThat(friendshipDto.relationshipStatus()).isEqualTo(statusSub),
+                () -> assertThat(friendshipDto.sourceUserId()).isEqualTo(currentUserId),
+                () -> assertThat(friendshipDto.targetUserId()).isEqualTo(targetUserId),
+                () -> assertThat(friendshipDto.archive()).isFalse()
         );
-        verify(friendshipRepository, times(1))
-                .findByTargetUserAndSourceUser(sourceUserId, targetUserId);
-        verify(deletionConditionHandler, times(1))
-                .handleConditionsForDeletingFriending(statusFriend, sourceUserId);
+    }
+
+    @Test
+    @DisplayName("Удаление из друзей. Статус \"Заявка\". currentUserId == sourceUserId")
+    void testDeleteFromFriendsStatusApplicationSuccessOne() {
+
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusApp = RelationshipStatus.APPLICATION;
+
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusApp, LocalDateTime.now(), false);
+        var savedFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusApp, LocalDateTime.now(), true);
+
+        when(friendshipRepository.findByTargetUserAndSourceUser(currentUserId, targetUserId)).thenReturn(Optional.of(foundFriendship));
+        when(friendshipRepository.save(any())).thenReturn(savedFriendship);
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(currentUserId, targetUserId);
+
+        assertAll(
+                () -> assertThat(friendshipDto).isNotNull(),
+                () -> assertThat(friendshipDto.relationshipStatus()).isEqualTo(statusApp),
+                () -> assertThat(friendshipDto.sourceUserId()).isEqualTo(currentUserId),
+                () -> assertThat(friendshipDto.targetUserId()).isEqualTo(targetUserId),
+                () -> assertThat(friendshipDto.archive()).isTrue()
+        );
+    }
+
+    @Test
+    @DisplayName("Удаление из друзей. Статус \"Заявка\". currentUserId == targetUserId")
+    void testDeleteFromFriendsStatusApplicationSuccessTwo() {
+
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusSub = RelationshipStatus.SUBSCRIBER;
+
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                RelationshipStatus.APPLICATION, LocalDateTime.now(), false);
+        var savedFriendship = new Friendship(1L, targetUserId, currentUserId,
+                statusSub, LocalDateTime.now(), false);
+
+        when(friendshipRepository.findByTargetUserAndSourceUser(targetUserId, currentUserId)).thenReturn(Optional.of(foundFriendship));
+        when(friendshipRepository.save(any())).thenReturn(savedFriendship);
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(targetUserId, currentUserId);
+
+        assertAll(
+                () -> assertThat(friendshipDto).isNotNull(),
+                () -> assertThat(friendshipDto.relationshipStatus()).isEqualTo(statusSub),
+                () -> assertThat(friendshipDto.sourceUserId()).isEqualTo(targetUserId),
+                () -> assertThat(friendshipDto.targetUserId()).isEqualTo(currentUserId),
+                () -> assertThat(friendshipDto.archive()).isFalse()
+        );
+    }
+
+    @Test
+    @DisplayName("Удаление из друзей. Статус \"Подписчик\". currentUserId == sourceUserId")
+    void testDeleteFromFriendsStatusSubscriberSuccessOne() {
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusSub = RelationshipStatus.SUBSCRIBER;
+
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusSub, LocalDateTime.now(), false);
+        var savedFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusSub, LocalDateTime.now(), true);
+
+        when(friendshipRepository.findByTargetUserAndSourceUser(currentUserId, targetUserId)).thenReturn(Optional.of(foundFriendship));
+        when(friendshipRepository.save(any())).thenReturn(savedFriendship);
+        FriendshipDto friendshipDto = friendshipService.deleteFromFriends(currentUserId, targetUserId);
+
+        assertAll(
+                () -> assertThat(friendshipDto).isNotNull(),
+                () -> assertThat(friendshipDto.relationshipStatus()).isEqualTo(statusSub),
+                () -> assertThat(friendshipDto.sourceUserId()).isEqualTo(currentUserId),
+                () -> assertThat(friendshipDto.targetUserId()).isEqualTo(targetUserId),
+                () -> assertThat(friendshipDto.archive()).isTrue()
+        );
+    }
+
+    @Test
+    @DisplayName("Удаление из друзей. Статус \"Подписчик\". currentUserId == targetUserId")
+    void testDeleteFromFriendsStatusSubscriberSuccessTwo() {
+        var currentUserId = 1L;
+        var targetUserId = 2L;
+        var statusSub = RelationshipStatus.SUBSCRIBER;
+        var deleteUserAreSubExc = localizationExceptionMessage.getDeleteUserAreSubExc();
+
+        var foundFriendship = new Friendship(1L, currentUserId, targetUserId,
+                statusSub, LocalDateTime.now(), false);
+
+        when(friendshipRepository.findByTargetUserAndSourceUser(targetUserId, currentUserId)).thenReturn(Optional.of(foundFriendship));
+
+
+        assertThrows(UnfriendingException.class,
+                () -> friendshipService.deleteFromFriends(targetUserId, currentUserId),
+                deleteUserAreSubExc
+        );
     }
 }

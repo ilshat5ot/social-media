@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface ConditionForAddingAsFriend {
 
-    Optional<FriendshipDto> processTheTermsOfFriendship(Friendship friendship, Long currentUserId);
+    Optional<FriendshipDto> handleFriendRequest(Friendship friendship, Long currentUserId);
 }

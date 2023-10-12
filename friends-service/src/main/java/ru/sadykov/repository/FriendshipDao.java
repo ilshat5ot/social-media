@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface FriendshipDao {
 
-    Optional<Friendship> findByTargetUserAndSourceUser(Long targetUser, Long sourceUser);
+    Optional<Friendship> findByTargetUserAndSourceUser(Long targetUserId, Long sourceUserId);
 }

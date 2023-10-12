@@ -8,9 +8,10 @@ import ru.sadykov.entity.enums.RelationshipStatus;
 import ru.sadykov.exception.exceptions.AddingAsAFriendException;
 import ru.sadykov.exception.exceptions.FriendshipNotFoundException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
+import ru.sadykov.mapper.FriendshipMapper;
 import ru.sadykov.repository.FriendshipRepository;
 import ru.sadykov.service.FriendshipService;
-import ru.sadykov.service.addfriend.FriendshipConditionHandler;
+import ru.sadykov.service.addfriend.AddConditionHandler;
 import ru.sadykov.service.deletefriend.DeletionConditionHandler;
 
 import java.time.LocalDateTime;
@@ -21,55 +22,41 @@ import java.util.Optional;
 public class FriendshipServiceImpl implements FriendshipService {
 
     private final FriendshipRepository friendshipRepository;
-    private final FriendshipConditionHandler friendshipConditionHandler;
+    private final AddConditionHandler addConditionHandler;
     private final DeletionConditionHandler deletionConditionHandler;
     private final LocalizationExceptionMessage localizationExceptionMessage;
+    private final FriendshipMapper friendshipMapper;
 
     @Override
-    public FriendshipDto addAsFriend(Long currentUserId, Long userId) {
+    public FriendshipDto addAsFriend(Long currentUserId, Long targetUserId) {
 
-        checkingYourself(currentUserId, userId);
+        checkingYourself(currentUserId, targetUserId);
 
         Optional<Friendship> optionalFriendship = friendshipRepository
-                .findByTargetUserAndSourceUser(currentUserId, userId);
+                .findByTargetUserAndSourceUser(currentUserId, targetUserId);
 
         if (optionalFriendship.isPresent()) {
             Friendship friendship = optionalFriendship.get();
-            if (friendship.isArchive()) {
-                friendship.setRelationshipStatus(RelationshipStatus.APPLICATION);
-                Friendship savedFriendship = friendshipRepository.save(friendship);
-                return FriendshipDto
-                        .builder()
-                        .id(savedFriendship.getId())
-                        .sourceUserId(savedFriendship.getSourceUser())
-                        .targetUserId(savedFriendship.getTargetUser())
-                        .relationshipStatus(savedFriendship.getRelationshipStatus())
-                        .build();
-            } else {
-                return friendshipConditionHandler.handleFriendshipStatus(friendship, currentUserId);
-            }
-        } else {
-            Friendship newFriendship = fillFriend(currentUserId, userId, RelationshipStatus.APPLICATION, LocalDateTime.now(), false);
-            Friendship savedFriendship = friendshipRepository.save(newFriendship);
-            return FriendshipDto
-                    .builder()
-                    .id(savedFriendship.getId())
-                    .sourceUserId(savedFriendship.getSourceUser())
-                    .targetUserId(savedFriendship.getTargetUser())
-                    .relationshipStatus(savedFriendship.getRelationshipStatus())
-                    .build();
+            return addConditionHandler.handleFriendAdditionConditions(friendship, currentUserId);
         }
+
+        Friendship friendship =
+                new Friendship(null, currentUserId, targetUserId,
+                        RelationshipStatus.APPLICATION, LocalDateTime.now(), false);
+
+        Friendship savedFriendship = friendshipRepository.save(friendship);
+        return friendshipMapper.toFriendshipDto(savedFriendship);
     }
 
     @Override
-    public FriendshipDto deleteFromFriends(Long currentUserId, Long targetId) {
-        checkingDeleteYourself(currentUserId, targetId);
+    public FriendshipDto deleteFromFriends(Long currentUserId, Long targetUserId) {
+        checkingDeleteYourself(currentUserId, targetUserId);
 
         Friendship friendship = friendshipRepository
-                .findByTargetUserAndSourceUser(currentUserId, targetId)
+                .findByTargetUserAndSourceUser(currentUserId, targetUserId)
                 .orElseThrow(() -> new FriendshipNotFoundException(localizationExceptionMessage.getFriendshipNotFoundExc()));
 
-        return deletionConditionHandler.handleConditionsForDeletingFriending(friendship, currentUserId);
+        return deletionConditionHandler.handleFriendRemovalConditions(friendship, currentUserId);
     }
 
     private void checkingDeleteYourself(Long currentUserId, Long targetId) {
@@ -84,14 +71,4 @@ public class FriendshipServiceImpl implements FriendshipService {
         }
     }
 
-    private Friendship fillFriend(Long currentUserId, Long userId, RelationshipStatus friendApplication,
-                                  LocalDateTime timeOfCreation, boolean isArchive) {
-        Friendship friend = new Friendship();
-        friend.setTargetUser(userId);
-        friend.setSourceUser(currentUserId);
-        friend.setRelationshipStatus(friendApplication);
-        friend.setTimeOfCreation(timeOfCreation.toString());
-        friend.setArchive(isArchive);
-        return friend;
-    }
 }

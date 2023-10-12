@@ -18,5 +18,5 @@ public record FriendshipDto(
         @Schema(description = "Статус отношения между пользователями", example = "FRIEND",
                 accessMode = Schema.AccessMode.READ_ONLY)
         RelationshipStatus relationshipStatus,
-        boolean isArchive) {
+        boolean archive) {
 }

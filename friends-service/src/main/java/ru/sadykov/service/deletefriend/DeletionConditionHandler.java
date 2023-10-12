@@ -17,10 +17,10 @@ public class DeletionConditionHandler {
     private final List<ConditionsForDeletingFriend> conditionsForDeletingFriends;
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
-    public FriendshipDto handleConditionsForDeletingFriending(Friendship friendship, Long currentUserId) {
+    public FriendshipDto handleFriendRemovalConditions(Friendship friendship, Long currentUserId) {
 
         return conditionsForDeletingFriends.stream()
-                .map(conditions -> conditions.processTheTermsOfDeletingFromFriends(friendship, currentUserId))
+                .map(conditions -> conditions.handleARequestToUnfriend(friendship, currentUserId))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst()

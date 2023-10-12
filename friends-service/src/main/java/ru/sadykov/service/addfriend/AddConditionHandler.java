@@ -12,17 +12,17 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class FriendshipConditionHandler {
+public class AddConditionHandler {
 
     private final List<ConditionForAddingAsFriend> conditionForAddingAsFriend;
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
-    public FriendshipDto handleFriendshipStatus(Friendship friendship, Long currentUserId) {
+    public FriendshipDto handleFriendAdditionConditions(Friendship friendship, Long currentUserId) {
 
         Optional<FriendshipDto> serviceResponse;
 
         for (ConditionForAddingAsFriend condition : conditionForAddingAsFriend) {
-            serviceResponse = condition.processTheTermsOfFriendship(friendship, currentUserId);
+            serviceResponse = condition.handleFriendRequest(friendship, currentUserId);
             if (serviceResponse.isPresent()) {
                 return serviceResponse.get();
             }

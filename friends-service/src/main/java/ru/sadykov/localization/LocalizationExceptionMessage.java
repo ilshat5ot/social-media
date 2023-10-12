@@ -37,7 +37,7 @@ public class LocalizationExceptionMessage {
         deleteUserAreSubExc = ms.getMessage("delete.subscriber");
         deleteFriendExc = ms.getMessage("delete.friend");
 
-        friendshipNotFoundExc = ms.getMessage("Запись о дружбе не найдена!");
+        friendshipNotFoundExc = ms.getMessage("friendship.not.found");
 
         invalidRequestExc = ms.getMessage("invalid.request");
     }
