@@ -31,7 +31,7 @@ public class YouAreASubscriberDel implements ConditionsForDeletingFriend {
             friendshipChange = true;
         } else if (friendship.getRelationshipStatus().equals(RelationshipStatus.SUBSCRIBER)
                 && friendship.getTargetUserId().equals(currentUser) && !friendship.isArchive()) {
-            throw new UnfriendingException(localizationExceptionMessage.getDeleteFriendExc());
+            throw new UnfriendingException(localizationExceptionMessage.getDeleteUserAreSubExc());
         }
         if (!friendshipChange) {
             return Optional.empty();
