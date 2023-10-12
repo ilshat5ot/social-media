@@ -7,41 +7,36 @@ import ru.sadykov.entity.Friendship;
 import ru.sadykov.entity.enums.RelationshipStatus;
 import ru.sadykov.exception.exceptions.UnfriendingException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
+import ru.sadykov.mapper.FriendshipMapper;
 import ru.sadykov.repository.FriendshipRepository;
 
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class YouAreASubscriber implements ConditionsForDeletingFriend {
+public class YouAreASubscriberDel implements ConditionsForDeletingFriend {
 
     private final FriendshipRepository friendshipRepository;
     private final LocalizationExceptionMessage localizationExceptionMessage;
+    private final FriendshipMapper friendshipMapper;
 
     @Override
-    public Optional<FriendshipDto> processTheTermsOfDeletingFromFriends(Friendship friendship, Long currentUser) {
+    public Optional<FriendshipDto> handleARequestToUnfriend(Friendship friendship, Long currentUser) {
 
-        Friendship savedFriendship = new Friendship();
+        boolean friendshipChange = false;
 
         if (friendship.getRelationshipStatus().equals(RelationshipStatus.SUBSCRIBER)
-                && friendship.getSourceUser().equals(currentUser) && !friendship.isArchive()) {
+                && friendship.getSourceUserId().equals(currentUser) && !friendship.isArchive()) {
             friendship.setArchive(true);
-
-            savedFriendship = friendshipRepository.save(friendship);
+            friendshipChange = true;
         } else if (friendship.getRelationshipStatus().equals(RelationshipStatus.SUBSCRIBER)
-                && friendship.getTargetUser().equals(currentUser) && !friendship.isArchive()) {
+                && friendship.getTargetUserId().equals(currentUser) && !friendship.isArchive()) {
             throw new UnfriendingException(localizationExceptionMessage.getDeleteFriendExc());
         }
-        if (savedFriendship.getId() == null) {
+        if (!friendshipChange) {
             return Optional.empty();
         }
-        return Optional.of(FriendshipDto
-                .builder()
-                .id(savedFriendship.getId())
-                .sourceUserId(savedFriendship.getSourceUser())
-                .targetUserId(savedFriendship.getTargetUser())
-                .relationshipStatus(savedFriendship.getRelationshipStatus())
-                .isArchive(savedFriendship.isArchive())
-                .build());
+        Friendship savedFriendship = friendshipRepository.save(friendship);
+        return Optional.of(friendshipMapper.toFriendshipDto(savedFriendship));
     }
 }

@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface ConditionsForDeletingFriend {
 
-    Optional<FriendshipDto> processTheTermsOfDeletingFromFriends(Friendship friendship, Long currentUser);
+    Optional<FriendshipDto> handleARequestToUnfriend(Friendship friendship, Long currentUser);
 }

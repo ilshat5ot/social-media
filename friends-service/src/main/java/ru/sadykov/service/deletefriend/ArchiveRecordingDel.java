@@ -11,12 +11,12 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class ArchiveRecording implements ConditionsForDeletingFriend {
+public class ArchiveRecordingDel implements ConditionsForDeletingFriend {
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Override
-    public Optional<FriendshipDto> processTheTermsOfDeletingFromFriends(Friendship friendship, Long currentUser) {
+    public Optional<FriendshipDto> handleARequestToUnfriend(Friendship friendship, Long currentUser) {
         if (friendship.isArchive()) {
             throw new UnfriendingException(localizationExceptionMessage.getDeleteFriendExc());
         }

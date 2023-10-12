@@ -1,7 +1,6 @@
 package ru.sadykov.service.addfriend;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.sadykov.dto.FriendshipDto;
 import ru.sadykov.entity.Friendship;
@@ -12,15 +11,15 @@ import ru.sadykov.localization.LocalizationExceptionMessage;
 import java.util.Optional;
 
 @Component
-@Order(0)
 @RequiredArgsConstructor
-public class UserIsAFriend implements ConditionForAddingAsFriend {
+public class YouAreAFriendAdd implements ConditionForAddingAsFriend {
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
     @Override
-    public Optional<FriendshipDto> processTheTermsOfFriendship(Friendship friendship, Long currentUserId) {
-        if (friendship.getRelationshipStatus().equals(RelationshipStatus.FRIEND)) {
+    public Optional<FriendshipDto> handleFriendRequest(Friendship friendship, Long currentUserId) {
+
+        if (friendship.getRelationshipStatus().equals(RelationshipStatus.FRIEND) && !friendship.isArchive()) {
             throw new AddingAsAFriendException(localizationExceptionMessage.getAddAsFriendExc());
         }
         return Optional.empty();
