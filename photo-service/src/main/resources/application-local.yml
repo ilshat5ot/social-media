@@ -1,4 +1,9 @@
 spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=photos&tableName=photo_meta_data,photo
+    username: postgres
+    password: Postgres
   data:
     mongodb:
       authentication-database: photo_db

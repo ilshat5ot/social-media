@@ -33,6 +33,7 @@ public class PhotoController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(url);
     }
 
