@@ -4,7 +4,3 @@ server:
 spring:
   application:
     name: photo-service
-
-images:
-  sizes:
-    320, 480

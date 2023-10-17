@@ -2,14 +2,13 @@ package ru.sadykov.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.sadykov.dto.PhotoDto;
+import ru.sadykov.convertor.ExtensionConverter;
 import ru.sadykov.entity.BinaryContent;
 import ru.sadykov.entity.Photo;
 import ru.sadykov.entity.PhotoMetaData;
-import ru.sadykov.localization.LocalizationExceptionMessage;
+import ru.sadykov.properties.PhotoProperties;
 import ru.sadykov.repository.BinaryContentRepository;
 import ru.sadykov.repository.PhotoMetaDataRepository;
 import ru.sadykov.repository.PhotoRepository;
@@ -17,9 +16,10 @@ import ru.sadykov.util.Photos;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -28,110 +28,84 @@ public class PhotoServiceImpl implements PhotoService {
     @Value("${base-url}")
     private String BASE_URL;
 
-    @Value("#{'${images.sizes}'.split(',')}")
-    private List<Integer> imagesWidth;
-
+    private final PhotoProperties photoProperties;
     private final BinaryContentRepository binaryContentRepository;
     private final PhotoProcessor photoProcessor;
-    private final LocalizationExceptionMessage localizationExceptionMessage;
     private final PhotoRepository photoRepository;
     private final PhotoMetaDataRepository photoMetaDataRepository;
 
+    private static final ExtensionConverter extensionConverter = ExtensionConverter.PNG;
+
     @Override
-    public String savePhoto(MultipartFile file) {
+    public List<Photo> savePhoto(MultipartFile file) {
 
-        BufferedImage originalPhoto = photoProcessor.readPhoto(file);
-        int originalWidth = originalPhoto.getWidth();
-        int originalHeight = originalPhoto.getHeight();
-        LinkedHashMap<Integer, Integer> imageWidthAndHeight = new LinkedHashMap<>();
-        imageWidthAndHeight.put(originalWidth, originalHeight);
+        BufferedImage originalPhotoBuffer = photoProcessor.readPhoto(file);
 
-        imagesWidth.forEach(width -> imageWidthAndHeight
-                .put(width, photoProcessor.calculatePhotoHeight(originalWidth, originalHeight, width)));
+        int originalWidth = originalPhotoBuffer.getWidth();
+        int originalHeight = originalPhotoBuffer.getHeight();
+
+        List<Integer> widthsPhoto = photoProperties.widths();
+        Map<Integer, Integer> photoSizes = widthsPhoto.stream()
+                .collect(Collectors.toMap(
+                        width -> width,
+                        width -> photoProcessor.calculatePhotoHeight(originalWidth, originalHeight, width))
+                );
 
         String originalFilename = file.getOriginalFilename();
         String photoExtension = Photos.getPhotoExtension(originalFilename);
-        List<BinaryContent> binaryContents = imageWidthAndHeight.entrySet().stream()
-                .skip(1)
+        List<BinaryContent> binaryContentResizedPhotos = photoSizes.entrySet().stream()
                 .map(entry -> {
                     int width = entry.getKey();
                     int height = entry.getValue();
-                    BufferedImage bufferedImage = photoProcessor.resizePhoto(originalPhoto, width, height);
+                    BufferedImage bufferedImage = photoProcessor.resizePhoto(originalPhotoBuffer, width, height);
                     byte[] photoAsByteArray = photoProcessor.convertPhotoToByteArray(bufferedImage, photoExtension);
-                    return new BinaryContent(null, photoAsByteArray);
+                    BinaryContent binaryContent = new BinaryContent();
+                    binaryContent.setPhoto(photoAsByteArray);
+                    return binaryContent;
                 })
                 .toList();
 
-        byte[] originalImageAsByteArray = photoProcessor.convertPhotoToByteArray(originalPhoto, photoExtension);
-
-        ArrayList<BinaryContent> photoBytes = new ArrayList<>(binaryContents);
-        photoBytes.add(0, new BinaryContent(null, originalImageAsByteArray));
-
-        List<String> binaryContentIds = photoBytes.stream()
-                .map(
-                        bytes -> {
+        List<String> binaryContentIds = binaryContentResizedPhotos.stream()
+                .map(bytes -> {
                             BinaryContent binaryContent = binaryContentRepository.save(bytes);
                             return binaryContent.getId();
-                        }
-                )
+                        })
                 .toList();
+        byte[] originalPhotoAsByteArray = photoProcessor.convertPhotoToByteArray(originalPhotoBuffer, photoExtension);
+        BinaryContent binaryContentOriginalPhoto = new BinaryContent();
+        BinaryContent savedBinaryContentOriginalPhoto = binaryContentRepository.save(binaryContentOriginalPhoto);
 
         PhotoMetaData photoMetaData = new PhotoMetaData();
         photoMetaData.setPhotoName(originalFilename);
-        photoMetaData.setMediaType(MediaType.IMAGE_PNG);
-        photoMetaData.setArchive(false);
+        photoMetaData.setMediaType(photoExtension);
 
         PhotoMetaData savedMetaData = photoMetaDataRepository.save(photoMetaData);
 
 
-        AtomicInteger i = new AtomicInteger(0);
-        List<Photo> photos = imageWidthAndHeight.entrySet().stream()
-                .map(entry -> {
-                    int width = entry.getKey();
-                    int height = entry.getValue();
+        List<Photo> photos1 = IntStream.range(0, photoSizes.size())
+                .mapToObj(i -> {
                     Photo photo = new Photo();
-                    photo.setWeight(width);
-                    photo.setHeight(height);
-                    String binaryContentId = binaryContentIds.get(i.getAndIncrement());
-                    photo.setBinaryContentId(binaryContentId);
+                    Integer widthPhoto = widthsPhoto.get(i);
+                    photo.setWeight(widthPhoto);
+                    photo.setHeight(photoSizes.get(widthPhoto));
                     photo.setPhotoMetaData(savedMetaData);
+                    photo.setBinaryContentId(binaryContentIds.get(i));
                     return photo;
                 })
                 .toList();
-        List<Photo> savedPhotos = photoRepository.saveAll(photos);
 
-        return null;
-    }
+        binaryContentOriginalPhoto.setPhoto(originalPhotoAsByteArray);
 
-    @Override
-    public PhotoDto getPhoto(String photoId, Integer width, Integer height) {
-//        var savedPhoto = binaryContentRepository
-//                .findById(photoId)
-//                .orElseThrow(() -> new PhotoNotFoundException(localizationExceptionMessage.getPhotoNotFoundExc()));
-//
-//        String photoExtension = Photos.getPhotoExtension(savedPhoto.getFileName());
-//        MediaType mediaType;
-//        if (photoExtension.equals("png")) {
-//            mediaType = MediaType.IMAGE_PNG;
-//        } else {
-//            mediaType = MediaType.IMAGE_JPEG;
-//        }
-//
-//        if (width != null || height != null) {
-//            Map<String, List<PhotoSize>> resizePhoto = savedPhoto.getResizePhoto();
-//            List<PhotoSize> fixedWidth = resizePhoto.get("fixed_width");
-//            Optional<PhotoSize> foundPhoto = fixedWidth.stream()
-//                    .filter(photoSize -> width.equals(photoSize.getWidth()) && height.equals(photoSize.getHeight()))
-//                    .findFirst();
-//            PhotoSize photoSize = foundPhoto.get();
-//
-//        } else {
-//
-//        }
-//        return PhotoDto.builder()
-//                .fileAsByteArrays(savedPhoto.getOriginalPhoto())
-//                .mediaType(mediaType)
-//                .build();
-        return null;
+        Photo originalPhoto = new Photo();
+        originalPhoto.setWeight(originalWidth);
+        originalPhoto.setHeight(originalHeight);
+        originalPhoto.setPhotoMetaData(savedMetaData);
+        originalPhoto.setBinaryContentId(savedBinaryContentOriginalPhoto.getId());
+
+        List<Photo> photos = photoRepository.saveAll(photos1);
+        Photo save = photoRepository.save(originalPhoto);
+        ArrayList<Photo> photos2 = new ArrayList<>(photos);
+        photos2.add(save);
+        return photos2;
     }
 }

@@ -1,6 +1,7 @@
 package ru.sadykov.entity;
 
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +15,6 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.http.MediaType;
 
 import java.time.LocalDateTime;
 
@@ -33,8 +33,10 @@ public class PhotoMetaData {
     private Long id;
 
     private String photoName;
-    private MediaType mediaType;
-    private boolean isArchive;
+
+    @Column(name = "media_type")
+    private String mediaType;
+    private Boolean isArchive = false;
 
     @CreatedDate
     private LocalDateTime createDate;

@@ -1,11 +1,11 @@
 package ru.sadykov.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import ru.sadykov.dto.PhotoDto;
+import ru.sadykov.entity.Photo;
+
+import java.util.List;
 
 public interface PhotoService {
 
-    String savePhoto(MultipartFile file);
-
-    PhotoDto getPhoto(String photoId, Integer width, Integer height);
+    List<Photo> savePhoto(MultipartFile file);
 }

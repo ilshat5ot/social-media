@@ -3,12 +3,11 @@ package ru.sadykov.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.sadykov.aspect.Loggable;
 import ru.sadykov.exception.exceptions.InputReadException;
 import ru.sadykov.localization.LocalizationExceptionMessage;
 
 import javax.imageio.ImageIO;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,7 +19,6 @@ public class PhotoProcessorImpl implements PhotoProcessor {
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
 
-    @Loggable
     @Override
     public BufferedImage readPhoto(MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
@@ -30,13 +28,11 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         }
     }
 
-    @Loggable
     @Override
     public int calculatePhotoHeight(int originalWidth, int originalHeight, int newWidth) {
         return (int) Math.round(originalHeight * (double) newWidth / originalWidth);
     }
 
-    @Loggable
     @Override
     public BufferedImage resizePhoto(BufferedImage inputImage, int newWidth, int newHeight) {
         Image resultingImage = inputImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
@@ -45,7 +41,6 @@ public class PhotoProcessorImpl implements PhotoProcessor {
         return outputImage;
     }
 
-    @Loggable
     @Override
     public byte[] convertPhotoToByteArray(BufferedImage bufferedImage, String imageExtension) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

@@ -3,7 +3,7 @@ create table photos.photo_meta_data
 (
     id bigserial not null primary key,
     photo_name varchar(100) not null,
-    media_type text not null,
+    media_type varchar(3) not null,
     is_archive boolean not null,
     create_date timestamp not null,
     last_modified_date timestamp not null

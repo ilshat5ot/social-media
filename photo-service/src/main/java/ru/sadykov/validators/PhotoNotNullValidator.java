@@ -11,12 +11,19 @@ import ru.sadykov.validation.PhotoNotNull;
 @Order(0)
 public class PhotoNotNullValidator implements ConstraintValidator<PhotoNotNull, MultipartFile> {
 
+    private String message;
+
+    @Override
+    public void initialize(PhotoNotNull constraintAnnotation) {
+        this.message = constraintAnnotation.message();
+    }
+
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.trim().equals("")) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("{photo.not.null}")
+            context.buildConstraintViolationWithTemplate(message)
                     .addConstraintViolation();
             return false;
         }
